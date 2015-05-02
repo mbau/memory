@@ -55,7 +55,7 @@ class Card(pygame.sprite.Sprite):
 					if self.curFrame >=30:
 						#Flip is complete
 						#Display card image
-						self.image = pygame.image.load("card/card"+str(self.value)+".jpg")
+						self.image = pygame.image.load("card/card"+str(self.value)+".png")
 
 						self.Flip = False #Stop flipping
 						self.flipDirection*=-1 #Change direction for next time
