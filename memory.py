@@ -1,3 +1,4 @@
+#!/usr/bin/python
 
 # This desplays the menu for the game
 # Memory and gives the user a choice to either host
@@ -8,6 +9,9 @@ import pygame
 import dumbmenu as dm
 import os
 import sys
+
+from work import Joiner
+from home import Hoster
 
 pygame.init()
 
@@ -48,16 +52,10 @@ choose = dm.dumbmenu(screen, [
                         'Join Game',
                         'Quit Game'], 385,300,None,50,1.4,gold,red)
 
-if choose == 0:
-	#Host the game, runs the home.py script
-	pygame.quit()
-	os.system("python2.6 home.py " + str(port))
-elif choose == 1:
-	#Join the game, runs the work.py script
-	pygame.quit()
-	os.system("python2.6 work.py " + address + ' ' + str(port))
-elif choose == 2:
-	#Exits menu
-    	print " 'Quit Game'."
-pygame.quit()
-exit()
+if choose == 0: # Host the game
+	Hoster(screen,port).start()
+elif choose == 1: # Join the game
+	Joiner(screen,address,port).start()
+elif choose == 2: # Exit the game
+	pass
+

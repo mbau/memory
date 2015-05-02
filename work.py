@@ -82,15 +82,14 @@ class Card(pygame.sprite.Sprite):
 # Class that stores game board state
 #
 class GameSpace:
-	def main(self):
-		#Basic Initializations
-		pygame.init()
+	def __init__(self, screen):
+		self.screen = screen
 
-		self.size = self.width, self.height = 970, 800
+		self.size = self.width, self.height = self.screen.get_size()
 		self.black = 0, 0, 0
 
-		self.screen = pygame.display.set_mode(self.size)
-
+	def main(self):
+		#Basic Initializations
 		self.firstCard = 0 #Stores number of cards that have been selected
 		self.message = "P1 turn" #Whose turn is it?
 		self.p1 = 0 #Score
@@ -416,23 +415,25 @@ class CommandConnFactory(ClientFactory):
     	def clientConnectionFailed(self, connector, reason):
         	print 'Connection failed. Reason:', reason
 
+class Joiner:
+	def __init__(self, screen, address, port):
+		self.screen = screen
+		self.address = address
+		self.port = port
 
+	def start(self):
+		#Initialize GameSpace
+		gs = GameSpace(self.screen)
+		gs.main()
+
+		#Create Looping Call
+		lc = LoopingCall(gs.gameLoop)
+		lc.start(.0166666666)
+
+		#Begin Connecting
+		reactor.connectTCP(self.address,self.port,CommandConnFactory(gs))
+		reactor.run()
 
 if __name__ == '__main__':	
-	# Process command-line arguments
-	address = sys.argv[1]
-	port = int(sys.argv[2])
-
-	#Initialize GameSpace
-	gs = GameSpace()
-	gs.main()
-
-	#Create Looping Call
-	lc = LoopingCall(gs.gameLoop)
-	lc.start(.0166666666)
-
-	#Begin Connecting
-	reactor.connectTCP(address,port,CommandConnFactory(gs))
-	reactor.run()
-
+	sys.exit('trying running memory.py')
 
