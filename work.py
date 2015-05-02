@@ -1,3 +1,4 @@
+
 # This is the script run by player 2. 
 # It allows the user to join a game by connecting to 
 # the designated port that player 1 is listening on 
@@ -13,70 +14,8 @@ from twisted.internet.protocol import Protocol, ClientFactory
 import pickle
 from twisted.internet.task import LoopingCall
 
-#
-# Class that stores all of the values for a single card
-#
-class Card(pygame.sprite.Sprite):
-	def __init__(self, gs=None,x=None,y=None,value=None):
-		pygame.sprite.Sprite.__init__(self)
-
-		self.gs = gs #game board
-		self.value = value #represents the card picture, either 0-11
-		
-		self.curFrame = 0 #counts frames during flipping
-		self.Flip = False #True when card is being flipped
-		self.flipDirection = 1 #Either 1 or -1 to determine which way to flip card
-		self.selected = False #True when card is clicked and/or turned over
-		self.matched = False #True when card has been matched
-
-		self.image = pygame.image.load("card/flip0.jpg")
-		self.rect = self.image.get_rect()
-		self.rect = self.rect.move(x,y)
-		self.loadflip()
-
-
-	def loadflip(self):
-		#Load all pictures in order for flip sequence and store in self.flip
-		self.flip = list()
-		for i in range(0,30):
-			self.flip.append(pygame.image.load("card/flip"+str(i)+".jpg"))	
-
-
-	def tick(self):
-		if self.matched is True:
-			#Card is matched, display black image
-			self.image = pygame.image.load("card/flip15.jpg")
-		else:
-			#If card is in process of flipping
-			if self.Flip is True:	
-
-				self.curFrame+=1
-				if self.flipDirection > 0:
-					if self.curFrame >=30:
-						#Flip is complete
-						#Display card image
-						self.image = pygame.image.load("card/card"+str(self.value)+".png")
-
-						self.Flip = False #Stop flipping
-						self.flipDirection*=-1 #Change direction for next time
-						self.curFrame = 0 #Reset
-					else:
-						#Display next image
-						self.image = self.flip[self.curFrame]
-				else: 
-					if self.curFrame >=30:
-						#Flip is complete
-						#Display back of card
-						self.image = pygame.image.load("card/flip0.jpg")
-
-						self.Flip = False #Stop flipping
-						self.flipDirection*=-1 #Change direction for next time
-						self.curFrame = 0 #reset
-					else:
-						#Display next image
-						self.image = self.flip[30 - self.curFrame]
-
-
+from card import Card
+from values import Values
 
 #
 # Class that stores game board state
@@ -256,65 +195,6 @@ class GameSpace:
 		#If it is player 2 turn, then send hte game state to player 1
 		if self.command != None and self.turn < 0:
 			self.command.send()
-
-
-
-
-
-#
-# This class is a wrapper for all of the variables for the
-# game. Class is pickled and then sent and received over the 
-# connection in order to communicate the game state
-#
-class Values():
-	def __init__(self):
-
-		#Card Dictionaries
-		self.card_curFrame = dict()
-		self.card_Flip = dict()
-		self.card_flipDirection = dict()
-		self.card_selected = dict()
-		self.card_matched = dict()
-		self.card_value = dict()
-
-		#GS Values
-		self.firstCard = 0
-		self.message = ""
-		self.p1 = 0
-		self.p2 = 0
-		self.turn = 1
-		self.timer = 0
-		self.startTimer = False
-
-		#card values initiated
-		for i in range(0,24):
-			self.card_curFrame[i] = 0
-			self.card_Flip[i] = False
-			self.card_flipDirection[i] = 1
-			self.card_selected[i] = False
-			self.card_matched[i] = False
-			self.card_value[i] = -1
-
-
-	def save(self,gs):
-		# Save all GS values
-		self.firstCard = gs.firstCard
-		self.message = gs.message
-		self.p1 = gs.p1
-		self.p2 = gs.p2
-		self.turn = gs.turn
-		self.timer = gs.timer
-		self.startTimer = gs.startTimer
-
-		# Save all card values
-		for i in range(0,24):
-			self.card_curFrame[i] = gs.card_list[i].curFrame
-			self.card_Flip[i] = gs.card_list[i].Flip
-			self.card_flipDirection[i] = gs.card_list[i].flipDirection
-			self.card_selected[i] = gs.card_list[i].selected
-			self.card_matched[i] = gs.card_list[i].matched
-			self.card_value[i] = gs.card_list[i].value
-
 
 #
 # Class that sends and receives data
