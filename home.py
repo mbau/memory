@@ -412,6 +412,7 @@ class CommandConnFactory(Factory):
 
 
 if __name__ == '__main__':
+	port = int(sys.argv[1])
 
 	#Initialize GameSpace
 	gs = GameSpace()
@@ -422,8 +423,7 @@ if __name__ == '__main__':
 	lc.start(.0166666666)
 		
 	#Begin Listening
-	COMMAND_PORT = 50033
-	reactor.listenTCP(COMMAND_PORT,CommandConnFactory(gs))
+	reactor.listenTCP(port,CommandConnFactory(gs))
 	reactor.run()
 
 

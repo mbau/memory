@@ -419,7 +419,10 @@ class CommandConnFactory(ClientFactory):
 
 
 if __name__ == '__main__':	
-	
+	# Process command-line arguments
+	address = sys.argv[1]
+	port = int(sys.argv[2])
+
 	#Initialize GameSpace
 	gs = GameSpace()
 	gs.main()
@@ -429,8 +432,7 @@ if __name__ == '__main__':
 	lc.start(.0166666666)
 
 	#Begin Connecting
-	COMMAND_PORT = 50033
-	reactor.connectTCP("localhost",COMMAND_PORT,CommandConnFactory(gs))
+	reactor.connectTCP(address,port,CommandConnFactory(gs))
 	reactor.run()
 
 
