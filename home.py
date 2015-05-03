@@ -305,7 +305,6 @@ class Hoster:
 		
 		#Begin Listening
 		reactor.listenTCP(self.port,CommandConnFactory(gs))
-		reactor.run()
 
 if __name__ == '__main__':
 	sys.exit('try running memory.py')

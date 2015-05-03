@@ -312,7 +312,6 @@ class Joiner:
 
 		#Begin Connecting
 		reactor.connectTCP(self.address,self.port,CommandConnFactory(gs))
-		reactor.run()
 
 if __name__ == '__main__':	
 	sys.exit('trying running memory.py')
