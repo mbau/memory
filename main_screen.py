@@ -23,14 +23,14 @@ class MainScreen:
 
 		self.looping = LoopingCall(self.tick)
 
-		self.addressfield = InputField('Server Address:',Rect(50,100,500,25),text='localhost')
-		self.portfield = InputField('Server Port:',Rect(50,130,500,25),text='40100',numeric=True)
+		self.addressfield = InputField('Server Address:',Rect(235,585,500,25),text='localhost')
+		self.portfield = InputField('Server Port:',Rect(235,615,500,25),text='40100',numeric=True)
 
-		self.errorlabel = TextLabel('',(50, 160),25,fgcolor=(255, 0, 0))
+		self.errorlabel = TextLabel('',(235, 645),25,fgcolor=(255, 0, 0))
 
-		self.hostbutton = Button('Host a Game',Rect(50,300,200,50),self.host)
-		self.joinbutton = Button('Join a Game',Rect(300,300,200,50),self.join)
-		self.quitbutton = Button('Quit',Rect(550,300,200,50),self.stop)
+		self.hostbutton = Button('Host a Game',Rect(40,710,270,50),self.host)
+		self.joinbutton = Button('Join a Game',Rect(350,710,270,50),self.join)
+		self.quitbutton = Button('Quit',Rect(660,710,270,50),self.stop)
 
 		# Widgets and focus route
 		self.widgets = {
