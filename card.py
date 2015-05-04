@@ -9,9 +9,10 @@ class Card(pygame.sprite.Sprite):
 
 		self.gs = gs #game board
 		self.value = value #represents the card picture, either 0-11
-		
+
 		self.curFrame = 0 #counts frames during flipping
 		self.Flip = False #True when card is being flipped
+		self.flipduration = 1000 # Length of the flip animation
 		self.flipDirection = 1 #Either 1 or -1 to determine which way to flip card
 		self.selected = False #True when card is clicked and/or turned over
 		self.matched = False #True when card has been matched
@@ -26,18 +27,29 @@ class Card(pygame.sprite.Sprite):
 		#Load all pictures in order for flip sequence and store in self.flip
 		self.flip = list()
 		for i in range(0,30):
-			self.flip.append(pygame.image.load("card/flip"+str(i)+".jpg"))	
+			self.flip.append(pygame.image.load("card/flip"+str(i)+".jpg"))
+
+
+	def select(self):
+		self.selected = True
+		self.startFlip()
+
+
+	def startFlip(self):
+		self.Flip = True
+		self.flipstart = pygame.time.get_ticks()
 
 
 	def tick(self):
-		if self.matched is True:
+		if self.matched:
 			#Card is matched, display black image
 			self.image = pygame.image.load("card/flip15.jpg")
 		else:
 			#If card is in process of flipping
-			if self.Flip is True:	
+			if self.Flip:
+				ticks = pygame.time.get_ticks() - self.flipstart
+				self.curFrame = max(1, min(30*ticks/self.flipduration,30))
 
-				self.curFrame+=1
 				if self.flipDirection > 0:
 					if self.curFrame >=30:
 						#Flip is complete
@@ -50,7 +62,7 @@ class Card(pygame.sprite.Sprite):
 					else:
 						#Display next image
 						self.image = self.flip[self.curFrame]
-				else: 
+				else:
 					if self.curFrame >=30:
 						#Flip is complete
 						#Display back of card

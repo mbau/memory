@@ -18,6 +18,7 @@ class MainScreen:
 	def __init__(self, screen):
 		self.screen = screen
 
+		self.stopped = False
 		self.targetfps = 60
 		self.black = 0, 0, 0
 
@@ -50,6 +51,8 @@ class MainScreen:
 	def stop(self, newscreen=None):
 		self.looping.stop()
 
+		self.stopped = True
+
 		if newscreen:
 			newscreen.start()
 		else: reactor.stop()
@@ -71,6 +74,9 @@ class MainScreen:
 		# Tick-tock
 		for widget in self.widgets:
 			widget.tick()
+
+		# Are we done, yet?
+		if self.stopped: return
 
 		# Update the screen
 		self.screen.fill(self.black)
