@@ -2,9 +2,13 @@ import pygame
 import random
 import sys
 
+from pygame.rect import Rect
+
 from twisted.internet import reactor
 
+from bonus_timer import BonusTimer
 from card import Card
+from interp import TimedInterpolator
 
 #
 # Class that stores game board state
@@ -24,6 +28,9 @@ class GameState:
 		self.selected = []
 		self.timestart = 0
 
+		self.maxbonus = 10000
+		self.bonus = BonusTimer(5000,Rect(600,750,330,25))
+
 		# Network initialization
 		self.inqueue.get().addCallback(self.gotMessage)
 
@@ -35,6 +42,8 @@ class GameState:
 		self.message = "P1 turn" #Whose turn is it?
 		self.p1 = 0 #Score
 		self.p2 = 0 #Score
+		self.p1interp = TimedInterpolator()
+		self.p2interp = TimedInterpolator()
 		self.turn = 1 # Player whose turn it is
 		self.GameOver = False
 
@@ -51,17 +60,32 @@ class GameState:
 		try:
 			if cmd[0] == 'connection_made':
 				self.start = True
+
+				if self.turn == self.player:
+					self.bonus.reset()
+					self.bonus.start()
+
+					self.outqueue.put('turn ' + str(self.bonus.starttime))
 			elif cmd[0] == 'card_order':
 				if self.player == 1:
 					print 'card ordering received from a player other than player 1'
 				elif self.cards:
 					print 'already have a card ordering'
 				else: self.initializeCards(int(x) for x in cmd[1:25])
+			elif cmd[0] == 'turn':
+				if self.turn == self.player:
+					print 'turn message received on own turn'
+				else:
+					starttime = int(cmd[1])
+					self.bonus.reset(starttime=starttime)
 			elif cmd[0] == 'select_card':
 				if self.turn == self.player:
-					pass
+					print 'received card selection message on own turn'
 				else:
-					i = int(cmd[1])
+					ticks = int(cmd[1])
+					self.bonus.update(time=ticks)
+
+					i = int(cmd[2])
 					self.selectCard(i)
 			else: print 'unknown command: ' + cmd[0]
 		except (IndexError, ValueError):
@@ -106,8 +130,11 @@ class GameState:
 
 			self.timestart = pygame.time.get_ticks()
 
+		if len(self.selected) == 2:
+			self.bonus.stop()
+
 	def gameLoop(self):
-		if self.start is True:
+		if self.start:
 			#If a player 2 is connected, then display main screen
 			self.loop()
 		else:
@@ -143,7 +170,7 @@ class GameState:
 							self.selectCard(i)
 
 							# Tell the other player
-							self.outqueue.put('select_card ' + str(i))
+							self.outqueue.put('select_card ' + str(self.bonus.curtime) + ' ' + str(i))
 				else:
 					print "Not Your Turn"
 
@@ -157,10 +184,13 @@ class GameState:
 				self.selected[1].selected = False
 
 				#Update score
+				score = 100 + int((1 - self.bonus.progress)*self.maxbonus)
 				if self.turn == 1:
-					self.p1+=1
+					self.p1interp.start(self.p1,self.p1 + score,2000)
+					self.p1 += score
 				else:
-					self.p2+=1
+					self.p2interp.start(self.p2,self.p2 + score,2000)
+					self.p2 += score
 			else: #The 2 cards are not a match
 				#Flip the cards back over
 				self.selected[0].startFlip()
@@ -173,6 +203,14 @@ class GameState:
 			#Change turns
 			self.turn = 2 if self.turn == 1 else 1
 
+			self.bonus.stop()
+			self.bonus.reset()
+			if self.turn == self.player:
+				self.bonus.start()
+
+			if self.turn == self.player:
+				self.outqueue.put('turn ' + str(self.bonus.starttime))
+
 			if self.turn == 1:
 				self.message = "P1 turn"
 			else:
@@ -182,12 +220,14 @@ class GameState:
 		for card in self.cards:
 			card.tick()
 
+		self.bonus.tick()
+
 		# Set labels
 		myfont = pygame.font.SysFont("monospace",30)
 		self.label = myfont.render("Memory ",1,(250,215,0))
 		self.turnlabel = myfont.render(str(self.message),1,(250,215,0))
-		self.player1 = myfont.render("Player 1: "+str(self.p1),1,(250,215,0))
-		self.player2 = myfont.render("Player 2: "+str(self.p2),1,(250,215,0))
+		self.player1 = myfont.render("Player 1: "+str(self.p1interp.current()),1,(250,215,0))
+		self.player2 = myfont.render("Player 2: "+str(self.p2interp.current()),1,(250,215,0))
 		self.gameover = myfont.render("GAME OVER",3,(250,215,0))
 
 		#Make screen black
@@ -197,10 +237,13 @@ class GameState:
 		for card in self.cards:
 			self.screen.blit(card.image,card.rect)
 
+		# Draw the bonus timer
+		self.bonus.draw(self.screen)
+
 		#display labels
 		self.screen.blit(self.label,(430,30))
 		self.screen.blit(self.player1,(20,30))
-		self.screen.blit(self.player2,(750,30))
+		self.screen.blit(self.player2,(950 - self.player2.get_width(),30))
 		self.screen.blit(self.turnlabel,(430,750))
 
 		#Check if game over
