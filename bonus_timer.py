@@ -1,4 +1,3 @@
-import math
 import pygame
 
 from pygame.rect import Rect
@@ -40,7 +39,6 @@ class BonusTimer:
 
 		if self.running or time != None:
 			self.progress = min(float(self.curtime - self.starttime)/self.duration,1)
-			self.progress = math.sqrt(self.progress)
 
 	def tick(self):
 		self.update()

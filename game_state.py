@@ -9,6 +9,7 @@ from twisted.internet import reactor
 from bonus_timer import BonusTimer
 from card import Card
 from interp import TimedInterpolator
+from powers import Power
 
 #
 # Class that stores game board state
@@ -30,6 +31,9 @@ class GameState:
 
 		self.maxbonus = 10000
 		self.bonus = BonusTimer(5000,Rect(600,750,330,25))
+
+		self.powers = []
+		for i in xrange(12): self.powers.append(Power(i))
 
 		# Network initialization
 		self.inqueue.get().addCallback(self.gotMessage)
@@ -163,7 +167,7 @@ class GameState:
 			if event.type == pygame.QUIT:
 				reactor.stop()
 			elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-				#User clicks card and it is his/her turn
+				# Check for clicks on game objects
 				if self.turn == self.player:
 					for i, card in enumerate(self.cards):
 						if card.rect.collidepoint(pygame.mouse.get_pos()):
@@ -171,8 +175,10 @@ class GameState:
 
 							# Tell the other player
 							self.outqueue.put('select_card ' + str(self.bonus.curtime) + ' ' + str(i))
-				else:
-					print "Not Your Turn"
+
+					for power in self.powers:
+						if power.rect.collidepoint(pygame.mouse.get_pos()):
+							power.activate()
 
 		#After 3 seconds, update score, switch turn and flip cards back over
 		if len(self.selected) == 2 and pygame.time.get_ticks() - self.timestart > 3000:
@@ -182,6 +188,10 @@ class GameState:
 				self.selected[1].matched = True
 				self.selected[0].selected = False
 				self.selected[1].selected = False
+
+				# Activate the power
+				if self.turn == self.player:
+					self.powers[self.selected[0].value].setAvailable(True)
 
 				#Update score
 				score = 100 + int((1 - self.bonus.progress)*self.maxbonus)
@@ -220,6 +230,9 @@ class GameState:
 		for card in self.cards:
 			card.tick()
 
+		for power in self.powers:
+			power.tick()
+
 		self.bonus.tick()
 
 		# Set labels
@@ -236,6 +249,10 @@ class GameState:
 		#display cards
 		for card in self.cards:
 			self.screen.blit(card.image,card.rect)
+
+		# Draw the power icons
+		for power in self.powers:
+			power.draw(self.screen)
 
 		# Draw the bonus timer
 		self.bonus.draw(self.screen)
