@@ -82,7 +82,9 @@ class Power:
 				self.gs.outqueue.put('sniff')
 		elif self.value == Card.ROOSTER: # Reset this and one other pair
 			if not self.activeevil:
-				value = random.choice(filter(lambda c: c.matched and c.value != Card.ROOSTER,self.gs.cards)).value
+				try: value = random.choice(filter(lambda c: c.matched and c.value != Card.ROOSTER,self.gs.cards)).value
+				except IndexError: value = Card.ROOSTER
+
 				self.gs.inqueue.put('replenish_card ' + str(value))
 				self.gs.outqueue.put('replenish_card ' + str(value))
 		elif self.value == Card.DOG: # Steal 10% of the other player's points
