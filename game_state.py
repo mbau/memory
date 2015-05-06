@@ -29,11 +29,18 @@ class GameState:
 		self.selected = []
 		self.timestart = 0
 
+		self.matchallowed = True
+		self.doneselecting = False
+		self.skipturn = False
+
 		self.maxbonus = 10000
+		self.bonusdurations = {1: 5000, 2: 5000}
 		self.bonus = BonusTimer(5000,Rect(600,750,330,25))
 
 		self.powers = []
-		for i in xrange(12): self.powers.append(Power(i))
+		self.powersallowed = True
+		for i in xrange(12):
+			self.powers.append(Power(self,i))
 
 		# Network initialization
 		self.inqueue.get().addCallback(self.gotMessage)
@@ -49,6 +56,7 @@ class GameState:
 		self.p1interp = TimedInterpolator()
 		self.p2interp = TimedInterpolator()
 		self.turn = 1 # Player whose turn it is
+		self.turncount = 0
 		self.GameOver = False
 
 		#Create labels
@@ -90,12 +98,78 @@ class GameState:
 					self.bonus.update(time=ticks)
 
 					i = int(cmd[2])
-					self.selectCard(i)
+					self.selectCard(i,notify=False)
+			elif cmd[0] == 'fast_bonus':
+				self.powers[Card.HORSE].activate(evil=True)
+			elif cmd[0] == 'scramble_cards':
+				self.powers[Card.MONKEY].activate(evil=True)
+			elif cmd[0] == 'skip_turn':
+				self.powers[Card.GORILLA].activate(evil=True)
+			elif cmd[0] == 'extra_points':
+				self.addPoints(1000)
+				self.powers[Card.SQUIRREL].activate(evil=True)
+			elif cmd[0] == 'disable_powers':
+				self.powers[Card.BULL].activate(evil=True)
+			elif cmd[0] == 'show_cards':
+				self.powers[Card.BIRD].activate(evil=True)
+			elif cmd[0] == 'erq_ureevat':
+				self.powers[Card.FISH].activate(evil=True)
+			elif cmd[0] == 'replenish_cards':
+				# Reset (most) cards
+				for card in self.cards:
+					if card.value != Card.SPIDER:
+						card.__init__(self,card.rect.x,card.rect.y,card.value)
+
+				self.scrambleCards()
+
+				# Also reset (most) powers
+				for power in self.powers:
+					if power.value != Card.SPIDER:
+						power.setAvailable(False)
+			elif cmd[0] == 'sniff':
+				if not self.doneselecting and len(self.selected) == 1:
+					for i, card in enumerate(self.cards):
+						if card.value == self.selected[0].value and card is not self.selected[0]:
+							self.selectCard(i)
+
+				if self.turn != self.player:
+					self.powers[Card.PIG].activate(evil=True)
+			elif cmd[0] == 'replenish_card':
+				value = int(cmd[1])
+
+				for card in filter(lambda c: c.value in (Card.ROOSTER, value),self.cards):
+					card.__init__(self,card.rect.x,card.rect.y,card.value)
+
+				self.scrambleCards()
+
+				self.powers[Card.ROOSTER].activate(evil=True)
+			elif cmd[0] == 'steal_points':
+				if self.turn == 1:
+					points = 0.1*self.p2
+					self.addPoints( points,player=1)
+					self.addPoints(-points,player=2)
+				else:
+					points = 0.1*self.p1
+					self.addPoints(-points,player=1)
+					self.addPoints( points,player=2)
+			elif cmd[0] == 'slow_bonus':
+				self.powers[Card.TURTLE].activate(evil=True)
 			else: print 'unknown command: ' + cmd[0]
 		except (IndexError, ValueError):
 			print 'bad command received: ' + msg
 
 		self.inqueue.get().addCallback(self.gotMessage)
+
+	def cardPosition(self, n):
+		topleft = 10, 100
+		hspacing = 160
+		vspacing = 160
+		ncols = 6
+
+		x = topleft[0] + n%ncols*hspacing
+		y = topleft[1] + n/ncols*vspacing
+
+		return x, y
 
 	def arrangeCards(self):
 		# Two of each of the twelve cards
@@ -104,38 +178,52 @@ class GameState:
 		# Tell the other player
 		self.outqueue.put('card_order ' + ' '.join(str(c.value) for c in self.cards))
 
+	def scrambleCards(self):
+		order = iter(random.sample(range(24),24))
+
+		for card in self.cards:
+			pos = self.cardPosition(next(order))
+			card.move(pos[0],pos[1])
+
 	def initializeCards(self, ids):
 		self.cards = []
 
 		# Card arrangement
-		topleft = 10, 100
-		hspacing = 160
-		vspacing = 160
-		ncols = 6
-
 		n = 0
 		for i in ids:
-			x = topleft[0] + n%ncols*hspacing
-			y = topleft[1] + n/ncols*vspacing
-
-			self.cards.append(Card(self,x,y,i))
+			pos = self.cardPosition(n)
+			self.cards.append(Card(self,pos[0],pos[1],i))
 
 			n += 1
 
 	# As long as 2 cards have not already been selected,
 	# and the card clicked is not already matched
 	# or already selected, then flip it.
-	def selectCard(self, i):
+	def selectCard(self, i, notify=True):
 		card = self.cards[i]
 
-		if len(self.selected) < 2 and not card.matched and not card.selected:
+		if not self.doneselecting and not card.matched and not card.selected:
 			card.select()
 			self.selected.append(card)
 
 			self.timestart = pygame.time.get_ticks()
 
-		if len(self.selected) == 2:
+			self.doneselecting |= len(self.selected) >= 2
+
+		if self.doneselecting:
 			self.bonus.stop()
+
+		# Tell the other player
+		if notify:
+			self.outqueue.put('select_card ' + str(self.bonus.curtime) + ' ' + str(i))
+
+	def addPoints(self, points, player=None):
+		if player == 1 or self.turn == 1:
+			self.p1interp.start(self.p1,self.p1 + points,2000)
+			self.p1 += points
+		else:
+			self.p2interp.start(self.p2,self.p2 + points,2000)
+			self.p2 += points
 
 	def gameLoop(self):
 		if self.start:
@@ -173,45 +261,43 @@ class GameState:
 						if card.rect.collidepoint(pygame.mouse.get_pos()):
 							self.selectCard(i)
 
-							# Tell the other player
-							self.outqueue.put('select_card ' + str(self.bonus.curtime) + ' ' + str(i))
-
-					for power in self.powers:
-						if power.rect.collidepoint(pygame.mouse.get_pos()):
-							power.activate()
+					if not self.doneselecting and self.powersallowed:
+						for power in self.powers:
+							if power.rect.collidepoint(pygame.mouse.get_pos()):
+								power.activate()
 
 		#After 3 seconds, update score, switch turn and flip cards back over
-		if len(self.selected) == 2 and pygame.time.get_ticks() - self.timestart > 3000:
+		if self.doneselecting and pygame.time.get_ticks() - self.timestart > 3000:
 			#The 2 cards are a match
-			if self.selected[0].value == self.selected[1].value:
-				self.selected[0].matched = True
-				self.selected[1].matched = True
-				self.selected[0].selected = False
-				self.selected[1].selected = False
+			if self.matchallowed and self.selected[0].value == self.selected[1].value:
+				for card in self.selected:
+					card.matched = True
+					card.selected = False
 
 				# Activate the power
 				if self.turn == self.player:
 					self.powers[self.selected[0].value].setAvailable(True)
 
-				#Update score
-				score = 100 + int((1 - self.bonus.progress)*self.maxbonus)
-				if self.turn == 1:
-					self.p1interp.start(self.p1,self.p1 + score,2000)
-					self.p1 += score
-				else:
-					self.p2interp.start(self.p2,self.p2 + score,2000)
-					self.p2 += score
+				# Update score
+				self.addPoints(100 + int((1 - self.bonus.progress)*self.maxbonus))
 			else: #The 2 cards are not a match
 				#Flip the cards back over
-				self.selected[0].startFlip()
-				self.selected[1].startFlip()
-				self.selected[0].selected = False
-				self.selected[1].selected = False
+				for card in self.selected:
+					card.startFlip()
+					card.selected = False
 
 			self.selected = []
+			self.matchallowed = True
+			self.doneselecting = False
 
 			#Change turns
-			self.turn = 2 if self.turn == 1 else 1
+			for _ in xrange(2 if self.skipturn else 1):
+				self.bonusdurations[self.turn] = self.bonus.duration
+
+				self.turn = 2 if self.turn == 1 else 1
+				self.turncount += 1
+
+				self.bonus.setDuration(self.bonusdurations[self.turn])
 
 			self.bonus.stop()
 			self.bonus.reset()

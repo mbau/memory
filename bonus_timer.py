@@ -24,6 +24,9 @@ class BonusTimer:
 		font = pygame.font.SysFont('monospace',self.rect.h,bold=True)
 		self.textsurf = font.render('BONUS',True,(50, 50, 255))
 
+	def setDuration(self, duration):
+		self.duration = duration
+
 	def reset(self, starttime=None):
 		self.starttime = pygame.time.get_ticks() if starttime == None else starttime
 		self.progress = 0

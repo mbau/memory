@@ -4,6 +4,19 @@ import pygame
 # Class that stores all of the values for a single card
 #
 class Card(pygame.sprite.Sprite):
+	HORSE = 0
+	MONKEY = 1
+	GORILLA = 2
+	SQUIRREL = 3
+	BULL = 4
+	BIRD = 5
+	FISH = 6
+	SPIDER = 7
+	PIG = 8
+	ROOSTER = 9
+	DOG = 10
+	TURTLE = 11
+
 	def __init__(self, gs=None,x=None,y=None,value=None):
 		pygame.sprite.Sprite.__init__(self)
 
@@ -38,6 +51,11 @@ class Card(pygame.sprite.Sprite):
 	def startFlip(self):
 		self.Flip = True
 		self.flipstart = pygame.time.get_ticks()
+
+
+	def move(self, x, y):
+		self.rect.x = x
+		self.rect.y = y
 
 
 	def tick(self):
