@@ -24,15 +24,22 @@ class Joiner:
 		outqueue = DeferredQueue()
 
 		#Initialize GameState
-		gs = GameState(self.screen,2,inqueue,outqueue)
+		gs = GameState(self,self.screen,2,inqueue,outqueue)
 
 		#Create Looping Call
-		lc = LoopingCall(gs.gameLoop)
-		lc.start(.0166666666)
+		self.lc = LoopingCall(gs.gameLoop)
+		self.lc.start(.0166666666)
 
 		#Begin Connecting
 		connfactory = CommandConnFactory(inqueue,outqueue)
 		reactor.connectTCP(self.address,self.port,connfactory)
+
+	def stop(self, nextscreen=None):
+		self.lc.stop()
+
+		if nextscreen:
+			nextscreen.start()
+		else: reactor.stop()
 
 if __name__ == '__main__':	
 	sys.exit('trying running memory.py')

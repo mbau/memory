@@ -2,6 +2,8 @@ import pygame
 import random
 import sys
 
+import main_screen
+
 from pygame.rect import Rect
 
 from twisted.internet import reactor
@@ -10,12 +12,14 @@ from bonus_timer import BonusTimer
 from card import Card
 from interp import TimedInterpolator
 from powers import Power
+from widgets import Button
 
 #
 # Class that stores game board state
 #
 class GameState:
-	def __init__(self, screen, player, inqueue, outqueue):
+	def __init__(self, owner, screen, player, inqueue, outqueue):
+		self.owner = owner
 		self.screen = screen
 		self.player = player
 		self.inqueue = inqueue
@@ -42,6 +46,8 @@ class GameState:
 		self.powersallowed = True
 		for i in xrange(12):
 			self.powers.append(Power(self,i))
+
+		self.menubutton = Button('Return to Menu',Rect(335,430,300,25),self.gotoMenu,fgcolor=self.yellow)
 
 		# Network initialization
 		self.inqueue.get().addCallback(self.gotMessage)
@@ -230,6 +236,9 @@ class GameState:
 			self.p2interp.start(self.p2,self.p2 + points,2000)
 			self.p2 += points
 
+	def gotoMenu(self):
+		self.owner.stop(main_screen.MainScreen(self.screen))
+
 	def gameLoop(self):
 		if self.start:
 			#If a player 2 is connected, then display main screen
@@ -270,6 +279,9 @@ class GameState:
 						for power in self.powers:
 							if power.rect.collidepoint(pygame.mouse.get_pos()):
 								power.activate()
+
+				if self.GameOver:
+					self.menubutton.click(event.button,event.pos)
 
 		#After 3 seconds, update score, switch turn and flip cards back over
 		if self.doneselecting and pygame.time.get_ticks() - self.timestart > 3000:
@@ -364,6 +376,8 @@ class GameState:
 			elif (self.p1 > self.p2) == (self.player == 1):
 				self.screen.blit(self.winsurf,(400, 400))
 			else: self.screen.blit(self.losesurf,(400, 400))
+
+			self.menubutton.draw(self.screen)
 
 		pygame.display.flip()
 

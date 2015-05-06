@@ -23,15 +23,22 @@ class Hoster:
 		outqueue = DeferredQueue()
 
 		#Initialize GameState
-		gs = GameState(self.screen,1,inqueue,outqueue)
+		gs = GameState(self,self.screen,1,inqueue,outqueue)
 
 		#Create Looping Call
-		lc = LoopingCall(gs.gameLoop)
-		lc.start(.0166666666)
+		self.lc = LoopingCall(gs.gameLoop)
+		self.lc.start(.0166666666)
 		
 		#Begin Listening
 		connfactory = CommandConnFactory(inqueue,outqueue)
 		reactor.listenTCP(self.port,connfactory)
+
+	def stop(self, nextscreen=None):
+		self.lc.stop()
+
+		if nextscreen:
+			nextscreen.start()
+		else: reactor.stop()
 
 if __name__ == '__main__':
 	sys.exit('try running memory.py')
