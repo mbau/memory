@@ -2,7 +2,6 @@ from twisted.internet.protocol import ClientFactory, Factory
 from twisted.protocols.basic import LineReceiver
 
 from card import Card
-from values import Values
 
 #
 # Class that sends and receives data; this is very lightweight, since it was
