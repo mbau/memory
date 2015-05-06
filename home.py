@@ -31,10 +31,11 @@ class Hoster:
 		
 		#Begin Listening
 		connfactory = CommandConnFactory(inqueue,outqueue)
-		reactor.listenTCP(self.port,connfactory)
+		self.listening = reactor.listenTCP(self.port,connfactory)
 
 	def stop(self, nextscreen=None):
 		self.lc.stop()
+		self.listening.stopListening()
 
 		if nextscreen:
 			nextscreen.start()
