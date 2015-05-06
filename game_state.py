@@ -23,6 +23,7 @@ class GameState:
 
 		self.size = self.width, self.height = self.screen.get_size()
 		self.black = 0, 0, 0
+		self.yellow = 250, 215, 0
 
 		self.start = False
 		self.cards = []
@@ -60,11 +61,15 @@ class GameState:
 		self.GameOver = False
 
 		#Create labels
-		myfont = pygame.font.SysFont("monospace",30)
-		self.label = myfont.render("Memory",1,(250,215,0))
-		self.player1 = myfont.render("Player 1: "+str(self.p1),1,(250,215,0))
-		self.player2 = myfont.render("Player 2: "+str(self.p2),1,(250,215,0))
-		self.gameover = myfont.render("WAITING FOR PLAYER 2",3,(250,215,0))
+		self.myfont = pygame.font.SysFont("monospace",30)
+		self.label = self.myfont.render("Memory",1,self.yellow)
+		self.turnlabel = self.myfont.render(str(self.message),1,self.yellow)
+		self.player1 = self.myfont.render("Player 1: "+str(self.p1),1,self.yellow)
+		self.player2 = self.myfont.render("Player 2: "+str(self.p2),1,self.yellow)
+		self.gameover = self.myfont.render("WAITING FOR PLAYER 2",3,self.yellow)
+		self.winsurf = self.myfont.render('You Win!',True,self.yellow)
+		self.tiesurf = self.myfont.render('It\'s a Tie!',True,self.yellow)
+		self.losesurf = self.myfont.render('You Lose!',True,self.yellow)
 
 	def gotMessage(self, msg):
 		cmd = msg.split(' ')
@@ -321,13 +326,10 @@ class GameState:
 
 		self.bonus.tick()
 
-		# Set labels
-		myfont = pygame.font.SysFont("monospace",30)
-		self.label = myfont.render("Memory ",1,(250,215,0))
-		self.turnlabel = myfont.render(str(self.message),1,(250,215,0))
-		self.player1 = myfont.render("Player 1: "+str(self.p1interp.current()),1,(250,215,0))
-		self.player2 = myfont.render("Player 2: "+str(self.p2interp.current()),1,(250,215,0))
-		self.gameover = myfont.render("GAME OVER",3,(250,215,0))
+		# Update labels
+		self.turnlabel = self.myfont.render(str(self.message),1,self.yellow)
+		self.player1 = self.myfont.render("Player 1: "+str(self.p1interp.current()),1,self.yellow)
+		self.player2 = self.myfont.render("Player 2: "+str(self.p2interp.current()),1,self.yellow)
 
 		#Make screen black
 		self.screen.fill(self.black)
@@ -355,9 +357,13 @@ class GameState:
 			if card.matched is False:
 				self.GameOver = False
 
-		#If game over, display words
-		if self.GameOver is True:
-			self.screen.blit(self.gameover,(400,400))
+		# If game over, display a message
+		if self.GameOver:
+			if self.p1 == self.p2:
+				self.screen.blit(self.tiesurf,(400, 400))
+			elif (self.p1 > self.p2) == (self.player == 1):
+				self.screen.blit(self.winsurf,(400, 400))
+			else: self.screen.blit(self.losesurf,(400, 400))
 
 		pygame.display.flip()
 
