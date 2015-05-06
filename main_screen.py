@@ -24,12 +24,16 @@ class MainScreen:
 		self.targetfps = 60
 		self.black = 0, 0, 0
 
+		self.musicenabled = True
+
 		self.looping = LoopingCall(self.tick)
 
-		self.addressfield = InputField('Server Address:',Rect(235,585,500,25),text='localhost')
-		self.portfield = InputField('Server Port:',Rect(235,615,500,25),text='40100',numeric=True)
+		self.addressfield = InputField('Server Address:',Rect(235,540,500,25),text='localhost')
+		self.portfield = InputField('Server Port:',Rect(235,570,500,25),text='40100',numeric=True)
 
-		self.errorlabel = TextLabel('',(235, 645),25,fgcolor=(255, 0, 0))
+		self.errorlabel = TextLabel('',(235, 600),25,fgcolor=(255, 0, 0))
+
+		self.musicbutton = Button('Music Enabled',Rect(335,630,300,40),self.toggleMusic)
 
 		self.hostbutton = Button('Host a Game',Rect(40,710,270,50),self.host)
 		self.joinbutton = Button('Join a Game',Rect(350,710,270,50),self.join)
@@ -38,8 +42,9 @@ class MainScreen:
 		# Widgets and focus route
 		self.widgets = {
 			self.addressfield: self.portfield,
-			self.portfield: self.hostbutton,
+			self.portfield: self.musicbutton,
 			self.errorlabel: None,
+			self.musicbutton: self.hostbutton,
 			self.hostbutton: self.joinbutton,
 			self.joinbutton: self.quitbutton,
 			self.quitbutton: self.addressfield
@@ -49,6 +54,10 @@ class MainScreen:
 
 	def start(self):
 		self.looping.start(1./self.targetfps)
+
+		# Start up the background music
+		pygame.mixer.music.load('sounds/song_1.ogg')
+		pygame.mixer.music.play(-1)
 
 	def stop(self, newscreen=None):
 		self.looping.stop()
@@ -95,6 +104,16 @@ class MainScreen:
 
 		for w in self.widgets:
 			w.setFocus(w is widget)
+
+	def toggleMusic(self):
+		self.musicenabled = not self.musicenabled
+
+		if self.musicenabled:
+			pygame.mixer.music.play(-1)
+			self.musicbutton.setText('Music Enabled')
+		else:
+			pygame.mixer.music.stop()
+			self.musicbutton.setText('Music Disabled')
 
 	def host(self):
 		port = int(self.portfield.getText())

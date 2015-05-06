@@ -40,8 +40,11 @@ class Button(Widget):
 		self.callback = callback
 
 		textscale = 0.8
-		font = pygame.font.Font(None,int(textscale*rect.h))
-		self.textsurf = font.render(text,True,self.fgcolor)
+		self.font = pygame.font.Font(None,int(textscale*rect.h))
+		self.setText(text)
+
+	def setText(self, text):
+		self.textsurf = self.font.render(text,True,self.fgcolor)
 
 	def click(self, button, position):
 		if button == 1 and self.rect.collidepoint(position):
