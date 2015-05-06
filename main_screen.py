@@ -15,6 +15,8 @@ from widgets import Button, InputField, TextLabel
 from work import Joiner
 
 class MainScreen:
+	BACKGROUND = pygame.image.load('WALLP2.png')
+
 	def __init__(self, screen):
 		self.screen = screen
 
@@ -80,6 +82,8 @@ class MainScreen:
 
 		# Update the screen
 		self.screen.fill(self.black)
+
+		self.screen.blit(MainScreen.BACKGROUND,(0, 0))
 
 		for widget in self.widgets:
 			widget.draw(self.screen)

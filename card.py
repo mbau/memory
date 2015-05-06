@@ -1,5 +1,7 @@
 import pygame
 
+from interp import TimedInterpolator
+
 #
 # Class that stores all of the values for a single card
 #
@@ -33,6 +35,8 @@ class Card(pygame.sprite.Sprite):
 		self.image = pygame.image.load("card/flip0.jpg")
 		self.rect = self.image.get_rect()
 		self.rect = self.rect.move(x,y)
+		self.xinterp = TimedInterpolator(self.rect.x)
+		self.yinterp = TimedInterpolator(self.rect.y)
 		self.loadflip()
 
 
@@ -54,6 +58,9 @@ class Card(pygame.sprite.Sprite):
 
 
 	def move(self, x, y):
+		self.xinterp.start(self.rect.x,x,duration=2000)
+		self.yinterp.start(self.rect.y,y,duration=2000)
+
 		self.rect.x = x
 		self.rect.y = y
 
@@ -92,4 +99,8 @@ class Card(pygame.sprite.Sprite):
 					else:
 						#Display next image
 						self.image = self.flip[30 - self.curFrame]
+
+
+	def draw(self, surface):
+		surface.blit(self.image,(self.xinterp.current(), self.yinterp.current()))
 

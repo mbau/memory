@@ -334,7 +334,7 @@ class GameState:
 
 		#display cards
 		for card in self.cards:
-			self.screen.blit(card.image,card.rect)
+			card.draw(self.screen)
 
 		# Draw the power icons
 		for power in self.powers:

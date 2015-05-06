@@ -12,5 +12,5 @@ class TimedInterpolator:
 
 	def current(self):
 		time = pygame.time.get_ticks() - self.starttime
-		return min(self.end,self.begin + (self.end - self.begin)*time/self.duration)
+		return sorted((self.begin,self.begin + (self.end - self.begin)*time/self.duration,self.end))[1]
 
