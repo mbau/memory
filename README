@@ -1,0 +1,95 @@
+Memory
+======
+
+A game by Michael Bau and Kevin Riehm.
+
+This is a version of the classic concentration game, where two players take
+turns trying to match cards, two at a time.
+
+How to Play
+-----------
+
+This is a two-player, networked game; in order to play, one player must first
+host a game by executing `./memory.py` on the command line, picking an
+available port number in the first screen, and clicking on 'Host a Game'. Then,
+the second player must also execute `./memory.py`, type in the address and port
+number of the host, and click on "Join a Game".
+
+Players then take turns selecting two cards, which are flipped over on both
+players' screens to show whether or not they match. If the two cards match, the
+player how picked them is awarded a number of points determined by the time
+they took to click the cards (indicated by the bar labeled "BONUS" in the
+lower-right of the screen). All matches receive 100 points, but the time-based
+bonus points can be up to two orders of magnitude greater!
+
+Once a player has matched a pair of cards, they are removed from play, and a
+miniature icon of the animal on the matched cards lights up in the lower-left
+of the screen. These icons indicate special powers available to a player for
+use on future turns. To use a power, simply click on the corresponding icon
+_before_ your turn is complete (i.e., before selecting your second card);
+generally speaking, you can use as many powers as you want in a single turn, in
+addition to the normal selection of cards.
+
+Each power behaves a little differently, but in general a faded icon means the
+power is not available to the player, a lit icon means it _is_ available for
+use, a yellow glow means a power you activated is currently operating, and a
+red glow means a power was activated by the other player and is currently
+affecting you (probably not in a positive way).
+
+Powers
+------
+
+Unless otherwise specified, each power is single-use.
+
+ - **Horse**: For the next two turns, decrease the amount of time the other
+   player has to get bonus points.
+
+ - **Monkey**: Rearrange the other player's view of the cards, without
+   affecting your own.
+
+ - **Gorilla**: Skip the other player's next turn, giving you two turns in
+   immediate succession.
+
+ - **Squirrel**: Get an immediate 1000 points; can be used once per turn,
+   indefinitely.
+
+ - **Bull**: For the next two turns, prevent the other player from activating
+   new powers (powers they have alreayd activated continue to function
+   normally).
+
+ - **Bird**: Flip over half of the remaining cards only on your screen (the
+   other player cannot see any of the flipped cards); however, this immediately
+   ends your turn, preventing the use of any more powers or the normal card
+   selection.
+
+ - **Fish**: The fish is a red herring.
+
+ - **Spider**: Reset all cards, other than the spider cards, to their original
+   unmatched state, allowing them to be picked again (and their powers
+   re-acquired); also shuffles the cards' arrangements on both players'
+   screens.
+
+ - **Pig**: When activated with exactly one card selected, has a two-thirds
+   chance of automatically selecting the matching card; otherwise, it does
+   nothing.
+
+ - **Rooster**: Reset the rooster cards and oe other randomly selected
+   already-matched pair to their original unmatched state; also shuffles the
+   cards' arrangements on both players' screens.
+
+ - **Dog**: Remove ten percent of the other player's points, and add the same
+   numerical amount to your own score.
+
+ - **Turtle**: For the next two turns, increase the amount of time you have to
+   get bonus points.
+
+Media Credits
+-------------
+
+`sounds/card_flip.wav`, from
+https://www.freesound.org/people/Splashdust/sounds/84322/, is under the
+Creative Commons 0 (public domain) license.
+
+`sounds/song_1.ogg` is "Autumn Day" by Kevin MacLeod, and is under the Creative
+Commons Attribution 3.0 license.
+
