@@ -19,8 +19,13 @@ class Card(pygame.sprite.Sprite):
 	DOG = 10
 	TURTLE = 11
 
+	FLIP_SOUND = None
+
 	def __init__(self, gs=None,x=None,y=None,value=None):
 		pygame.sprite.Sprite.__init__(self)
+
+		if Card.FLIP_SOUND == None:
+			Card.FLIP_SOUND = pygame.mixer.Sound('sounds/card_flip.wav')
 
 		self.gs = gs #game board
 		self.value = value #represents the card picture, either 0-11
@@ -53,6 +58,8 @@ class Card(pygame.sprite.Sprite):
 
 
 	def startFlip(self):
+		Card.FLIP_SOUND.play()
+
 		self.Flip = True
 		self.flipstart = pygame.time.get_ticks()
 
