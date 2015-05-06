@@ -1,5 +1,8 @@
 import pygame
 
+#
+# A convenience class to linearly interpolate between values (e.g., for sliding animations).
+#
 class TimedInterpolator:
 	def __init__(self, default=0):
 		self.start(default,default)

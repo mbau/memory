@@ -2,6 +2,10 @@ import pygame
 
 from pygame.rect import Rect
 
+#
+# Graphical indication of how much time a player has to still get bonus points,
+# and how many they can get.
+#
 class BonusTimer:
 	def __init__(self, duration, rect):
 		self.duration = duration
@@ -13,6 +17,7 @@ class BonusTimer:
 		self.stop()
 		self.reset()
 
+		# Load the bar image and split it into end caps and a middle section
 		bar = pygame.image.load('bonus_bar.png')
 		self.barleft = pygame.transform.smoothscale(bar.subsurface(Rect(0,0,12,24)),
 			(self.rect.h*12/24, self.rect.h))
@@ -27,6 +32,7 @@ class BonusTimer:
 	def setDuration(self, duration):
 		self.duration = duration
 
+	# Get ready for the next round
 	def reset(self, starttime=None):
 		self.starttime = pygame.time.get_ticks() if starttime == None else starttime
 		self.progress = 0
@@ -37,6 +43,7 @@ class BonusTimer:
 	def stop(self):
 		self.running = False
 
+	# Either keep up with pygame's clock, unless we are manually given a time
 	def update(self, time=None):
 		self.curtime = pygame.time.get_ticks() if time == None else time
 

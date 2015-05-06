@@ -28,18 +28,20 @@ class MainScreen:
 
 		self.looping = LoopingCall(self.tick)
 
+		# Network config input fields
 		self.addressfield = InputField('Server Address:',Rect(235,540,500,25),text='localhost')
 		self.portfield = InputField('Server Port:',Rect(235,570,500,25),text='40100',numeric=True)
-
 		self.errorlabel = TextLabel('',(235, 600),25,fgcolor=(255, 0, 0))
 
+		# Enable/disable the background music
 		self.musicbutton = Button('Music Enabled',Rect(335,630,300,40),self.toggleMusic)
 
+		# Start a game or quit
 		self.hostbutton = Button('Host a Game',Rect(40,710,270,50),self.host)
 		self.joinbutton = Button('Join a Game',Rect(350,710,270,50),self.join)
 		self.quitbutton = Button('Quit',Rect(660,710,270,50),self.stop)
 
-		# Widgets and focus route
+		# Widgets and focus route (for tabbing through the elements)
 		self.widgets = {
 			self.addressfield: self.portfield,
 			self.portfield: self.musicbutton,
@@ -52,6 +54,7 @@ class MainScreen:
 
 		self.focus(self.addressfield)
 
+	# Call our tick function for each frame
 	def start(self):
 		self.looping.start(1./self.targetfps)
 
@@ -59,6 +62,7 @@ class MainScreen:
 		pygame.mixer.music.load('sounds/song_1.ogg')
 		pygame.mixer.music.play(-1)
 
+	# Stop calling our tick function, and activate the next screen, if there is one
 	def stop(self, newscreen=None):
 		self.looping.stop()
 
@@ -105,6 +109,7 @@ class MainScreen:
 		for w in self.widgets:
 			w.setFocus(w is widget)
 
+	# Turn the background music on or off
 	def toggleMusic(self):
 		self.musicenabled = not self.musicenabled
 
@@ -115,6 +120,7 @@ class MainScreen:
 			pygame.mixer.music.stop()
 			self.musicbutton.setText('Music Disabled')
 
+	# Start up a game on the given port (ignore the address)
 	def host(self):
 		port = int(self.portfield.getText())
 
@@ -122,6 +128,7 @@ class MainScreen:
 			self.errorlabel.setText('invalid port number')
 		else: self.stop(Hoster(self.screen,port))
 
+	# Attempt to connect to the given address on the given port and join a game
 	def join(self):
 		address = self.addressfield.getText()
 		port = int(self.portfield.getText())

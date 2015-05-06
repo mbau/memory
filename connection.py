@@ -5,7 +5,11 @@ from card import Card
 from values import Values
 
 #
-# Class that sends and receives data
+# Class that sends and receives data; this is very lightweight, since it was
+# decided that seperation of concerns would be best served by keeping all of
+# the game logic seperate from the communication logic. This is essentially
+# just a relayer used to hook up some DeferredQueues to and from the real code
+# (one half of which is Twisted, the other our game logic.
 #
 class CommandConn(LineReceiver):
 	def __init__(self, factory):
@@ -20,12 +24,15 @@ class CommandConn(LineReceiver):
 	def connectionLost(self, reason):
 		print 'command connection lost: ' + reason.getErrorMessage()
 
+	# Take any received messages and put them into a DeferredQueue for
+	# other code to handle.
 	def lineReceived(self, line):
-		print 'line received: ' + line
+#		print 'line received: ' + line
 		self.factory.inqueue.put(line)
 
+	# Using a DeferredQueue, relay messages out across the network
 	def sendMessage(self, msg):
-		print 'line sent: ' + msg
+#		print 'line sent: ' + msg
 		self.sendLine(msg)
 
 		self.factory.outqueue.get().addCallback(self.sendMessage)

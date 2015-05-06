@@ -19,39 +19,47 @@ from widgets import Button
 #
 class GameState:
 	def __init__(self, owner, screen, player, inqueue, outqueue):
+		# Knowledge about the outside world
 		self.owner = owner
 		self.screen = screen
 		self.player = player
 		self.inqueue = inqueue
 		self.outqueue = outqueue
 
+		# UI configuration
 		self.size = self.width, self.height = self.screen.get_size()
 		self.black = 0, 0, 0
 		self.yellow = 250, 215, 0
 
+		# Game status tracking
 		self.start = False
 		self.cards = []
 		self.selected = []
 		self.timestart = 0
 
+		# Special flags to allow for the powers to function
 		self.matchallowed = True
 		self.doneselecting = False
 		self.skipturn = False
 
+		# Set up the bonus timer
 		self.maxbonus = 10000
 		self.bonusdurations = {1: 5000, 2: 5000}
 		self.bonus = BonusTimer(5000,Rect(600,750,330,25))
 
+		# Set up the powers
 		self.powers = []
 		self.powersallowed = True
 		for i in xrange(12):
 			self.powers.append(Power(self,i))
 
+		# Allow us to go back to the menu after a game
 		self.menubutton = Button('Return to Menu',Rect(335,430,300,25),self.gotoMenu,fgcolor=self.yellow)
 
 		# Network initialization
 		self.inqueue.get().addCallback(self.gotMessage)
 
+		# Let player 1 be authoritative on the ordering of the cards
 		if self.player == 1:
 			self.arrangeCards()
 
@@ -77,11 +85,14 @@ class GameState:
 		self.tiesurf = self.myfont.render('It\'s a Tie!',True,self.yellow)
 		self.losesurf = self.myfont.render('You Lose!',True,self.yellow)
 
+	# Code for handling a message (probably from the other player, across
+	# the network, but we don't really care either way).
 	def gotMessage(self, msg):
+		# All commands are text-based, with arguments and such seperated by single spaces
 		cmd = msg.split(' ')
 
 		try:
-			if cmd[0] == 'connection_made':
+			if cmd[0] == 'connection_made': # Signal to start the game proper
 				self.start = True
 
 				if self.turn == self.player:
@@ -89,19 +100,19 @@ class GameState:
 					self.bonus.start()
 
 					self.outqueue.put('turn ' + str(self.bonus.starttime))
-			elif cmd[0] == 'card_order':
+			elif cmd[0] == 'card_order': # Player 2 learning the answers
 				if self.player == 1:
 					print 'card ordering received from a player other than player 1'
 				elif self.cards:
 					print 'already have a card ordering'
 				else: self.initializeCards(int(x) for x in cmd[1:25])
-			elif cmd[0] == 'turn':
+			elif cmd[0] == 'turn': # Synchronize the bonus timers
 				if self.turn == self.player:
 					print 'turn message received on own turn'
 				else:
 					starttime = int(cmd[1])
 					self.bonus.reset(starttime=starttime)
-			elif cmd[0] == 'select_card':
+			elif cmd[0] == 'select_card': # Let the other player know which card you picked
 				if self.turn == self.player:
 					print 'received card selection message on own turn'
 				else:
@@ -110,6 +121,7 @@ class GameState:
 
 					i = int(cmd[2])
 					self.selectCard(i,notify=False)
+			# All of the below are commands associated with powers; c.f. powers.py
 			elif cmd[0] == 'fast_bonus':
 				self.powers[Card.HORSE].activate(evil=True)
 			elif cmd[0] == 'scramble_cards':
@@ -169,8 +181,10 @@ class GameState:
 		except (IndexError, ValueError):
 			print 'bad command received: ' + msg
 
+		# Ask for the next one form our DeferredQueue
 		self.inqueue.get().addCallback(self.gotMessage)
 
+	# Calculate the n-th layout position for a card
 	def cardPosition(self, n):
 		topleft = 10, 100
 		hspacing = 160
@@ -182,6 +196,7 @@ class GameState:
 
 		return x, y
 
+	# Determine the official order of the cards for this game
 	def arrangeCards(self):
 		# Two of each of the twelve cards
 		self.initializeCards(random.sample(list(n/2 for n in xrange(24)),24))
@@ -189,6 +204,7 @@ class GameState:
 		# Tell the other player
 		self.outqueue.put('card_order ' + ' '.join(str(c.value) for c in self.cards))
 
+	# Don't change the in-memory order of the cards, only the on-screen arrangement
 	def scrambleCards(self):
 		order = iter(random.sample(range(24),24))
 
@@ -196,6 +212,7 @@ class GameState:
 			pos = self.cardPosition(next(order))
 			card.move(pos[0],pos[1])
 
+	# Actually construct and place the cards
 	def initializeCards(self, ids):
 		self.cards = []
 
@@ -228,6 +245,7 @@ class GameState:
 		if notify:
 			self.outqueue.put('select_card ' + str(self.bonus.curtime) + ' ' + str(i))
 
+	# Change the score of a player (the current player, by default)
 	def addPoints(self, points, player=None):
 		points = int(points)
 
@@ -238,9 +256,11 @@ class GameState:
 			self.p2interp.start(self.p2,self.p2 + points,2000)
 			self.p2 += points
 
+	# Adieu
 	def gotoMenu(self):
 		self.owner.stop(main_screen.MainScreen(self.screen))
 
+	# The main game logic, called sixty times a second (assuming Twisted is reliable)
 	def gameLoop(self):
 		if self.start:
 			#If a player 2 is connected, then display main screen
@@ -305,6 +325,7 @@ class GameState:
 					card.startFlip()
 					card.selected = False
 
+			# Reset the selection for the next turn
 			self.selected = []
 			self.matchallowed = True
 			self.doneselecting = False
@@ -318,14 +339,17 @@ class GameState:
 
 				self.bonus.setDuration(self.bonusdurations[self.turn])
 
+			# Reset the bonus timer
 			self.bonus.stop()
 			self.bonus.reset()
 			if self.turn == self.player:
 				self.bonus.start()
 
+			# Synchronize with the other player
 			if self.turn == self.player:
 				self.outqueue.put('turn ' + str(self.bonus.starttime))
 
+			# Update the on-screen message
 			if self.turn == 1:
 				self.message = "P1 turn"
 			else:
@@ -340,7 +364,7 @@ class GameState:
 
 		self.bonus.tick()
 
-		# Update labels
+		# Update the on-screen labels
 		self.turnlabel = self.myfont.render(str(self.message),1,self.yellow)
 		self.player1 = self.myfont.render("Player 1: "+str(self.p1interp.current()),1,self.yellow)
 		self.player2 = self.myfont.render("Player 2: "+str(self.p2interp.current()),1,self.yellow)
@@ -365,7 +389,7 @@ class GameState:
 		self.screen.blit(self.player2,(950 - self.player2.get_width(),30))
 		self.screen.blit(self.turnlabel,(430,750))
 
-		#Check if game over
+		# Check for the endgame condition -- all cards matched
 		self.GameOver = bool(self.cards)
 		for card in self.cards:
 			if card.matched is False:

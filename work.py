@@ -19,7 +19,10 @@ class Joiner:
 		self.port = port
 
 	def start(self):
-		# Set up the connection between the state and the network
+		# Set up the connection between the state and the network;
+		# using queues gives a degree of seperation between the
+		# communication and game logic, and making them be deferred
+		# keeps it all asynchronous.
 		inqueue = DeferredQueue()
 		outqueue = DeferredQueue()
 
@@ -35,8 +38,10 @@ class Joiner:
 		reactor.connectTCP(self.address,self.port,connfactory)
 
 	def stop(self, nextscreen=None):
+		# Stop the GameState logic
 		self.lc.stop()
 
+		# Start up the next screen, if there is one
 		if nextscreen:
 			nextscreen.start()
 		else: reactor.stop()

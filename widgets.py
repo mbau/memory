@@ -7,7 +7,7 @@ import re
 
 from pygame.rect import Rect
 
-# Basic superclass
+# Basic superclass; mostly skeleton code
 class Widget:
 	def __init__(self, rect):
 		self.rect = rect
@@ -32,6 +32,8 @@ class Widget:
 	def draw(self, screen):
 		pass
 
+# Button with a text label; invokes a callback when clicked on by the mouse, or
+# when the enter key is pressed while in focus.
 class Button(Widget):
 	def __init__(self, text, rect, callback, fgcolor=(255, 255, 255)):
 		Widget.__init__(self,rect)
@@ -66,6 +68,7 @@ class Button(Widget):
 			self.rect.y + (self.rect.h - self.textsurf.get_height())/2)
 		screen.blit(self.textsurf,textposition)
 
+# Simple, single-line text display
 class TextLabel(Widget):
 	def __init__(self, text, position, size, fgcolor=(255, 255, 255)):
 		Widget.__init__(self,Rect(position,(0, 0)))
@@ -85,6 +88,7 @@ class TextLabel(Widget):
 	def draw(self, screen):
 		screen.blit(self.textsurf,self.position)
 
+# Single-line textual input, with a text label on the left
 class InputField(Widget):
 	def __init__(self, labeltext, rect, text='', numeric=False, fgcolor=(255, 255, 255)):
 		Widget.__init__(self,rect)
@@ -97,11 +101,13 @@ class InputField(Widget):
 
 		self.setText(text)
 
+	# Get the input contents
 	def getText(self):
 		if self.numeric and len(self.text) == 0:
 			return '0'
 		else: return self.text
 
+	# Update the input contents
 	def setText(self, text):
 		if self.numeric:
 			self.text = re.sub('[^0-9]','',text)
@@ -112,7 +118,7 @@ class InputField(Widget):
 	def sendKey(self, key):
 		if key == '\x08': # Backspace
 			self.setText(self.text[:-1])
-		else: self.setText(self.text + key.encode('utf-8'))
+		else: self.setText(self.text + key.encode('utf-8')) # Add to contents
 
 	def draw(self, screen):
 		# Label

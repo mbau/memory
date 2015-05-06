@@ -40,7 +40,7 @@ class Card(pygame.sprite.Sprite):
 		self.image = pygame.image.load("card/flip0.jpg")
 		self.rect = self.image.get_rect()
 		self.rect = self.rect.move(x,y)
-		self.xinterp = TimedInterpolator(self.rect.x)
+		self.xinterp = TimedInterpolator(self.rect.x) # For animations
 		self.yinterp = TimedInterpolator(self.rect.y)
 		self.loadflip()
 
@@ -64,6 +64,7 @@ class Card(pygame.sprite.Sprite):
 		self.flipstart = pygame.time.get_ticks()
 
 
+	# Start up an animation of moving to (x, y)
 	def move(self, x, y):
 		self.xinterp.start(self.rect.x,x,duration=2000)
 		self.yinterp.start(self.rect.y,y,duration=2000)
@@ -108,6 +109,7 @@ class Card(pygame.sprite.Sprite):
 						self.image = self.flip[30 - self.curFrame]
 
 
+	# Draw using the current animation coordinates
 	def draw(self, surface):
 		surface.blit(self.image,(self.xinterp.current(), self.yinterp.current()))
 

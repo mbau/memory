@@ -5,7 +5,12 @@ from pygame.rect import Rect
 
 from card import Card
 
+#
+# Class for the functioning of the magical powers granted by successfully
+# matching cards.
+#
 class Power:
+	# Visual indicators of activity
 	GLOW_IMAGE = pygame.image.load('icons/glow.png')
 	EVIL_IMAGE = pygame.image.load('icons/evil.png')
 
@@ -19,10 +24,14 @@ class Power:
 		self.image = pygame.image.load('icons/icon' + str(self.value) + '.png')
 		self.rect = Rect((20 + self.value*31, 752),self.image.get_size())
 
+	# Whether we have the power or not
 	def setAvailable(self, available):
 		self.available = available
 
+	# When a user clicks on a power icon, or when a message is received
+	# that a user clicked on a (probably evil) power icon.
 	def activate(self, evil=False):
+		# Can't activate the good version unless we have the power
 		if self.active or not self.available and not evil:
 			return
 
@@ -97,6 +106,7 @@ class Power:
 			if not self.activeevil:
 				self.gs.outqueue.put('slow_bonus')
 
+	# Check each frame for the end conditions (if any) for the powers' effects
 	def tick(self):
 		if not self.active:
 			return
@@ -156,6 +166,7 @@ class Power:
 				self.active = False
 
 	def draw(self, screen):
+		# Glow if stuff is happening
 		if self.active:
 			glowx = self.rect.x + (self.rect.w - Power.GLOW_IMAGE.get_width())/2
 			glowy = self.rect.y + (self.rect.h - Power.GLOW_IMAGE.get_height())/2
@@ -163,6 +174,7 @@ class Power:
 				screen.blit(Power.EVIL_IMAGE,(glowx, glowy))
 			else: screen.blit(Power.GLOW_IMAGE,(glowx, glowy))
 
+		# Normal icon when available, faded when not
 		if self.available:
 			screen.blit(self.image,self.rect)
 		else:
