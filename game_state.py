@@ -229,6 +229,8 @@ class GameState:
 			self.outqueue.put('select_card ' + str(self.bonus.curtime) + ' ' + str(i))
 
 	def addPoints(self, points, player=None):
+		points = int(points)
+
 		if player == 1 or self.turn == 1:
 			self.p1interp.start(self.p1,self.p1 + points,2000)
 			self.p1 += points
