@@ -1,7 +1,4 @@
-
-# This is the script run by player 1. 
-# It allows the user to host a game by listening on 
-# the designated port until player 2 joins 
+#run by the host
 
 import sys
 

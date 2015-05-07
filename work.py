@@ -1,7 +1,4 @@
-
-# This is the script run by player 2. 
-# It allows the user to join a game by connecting to 
-# the designated port that player 1 is listening on 
+#run by the client who joins a set up host
 
 import sys
 
